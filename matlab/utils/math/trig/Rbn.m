@@ -1,6 +1,6 @@
 % Hery A Mwenegoha copyright (c) 2020
 
-function y = Rbn(x)
+function y = Rbn(varargin)
 % Body to NED transformation
-y = Rnb(x).';
+y = Rnb(varargin{:}).';
 end

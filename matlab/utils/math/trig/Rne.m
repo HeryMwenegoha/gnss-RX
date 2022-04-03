@@ -1,6 +1,6 @@
 % Hery A Mwenegoha copyright (c) 2020
 
-function y=Rne(x)
+function y=Rne(varargin)
 % NED-to-ECEF transformation
-y=Ren(x).';
+y=Ren(varargin{:}).';
 end
