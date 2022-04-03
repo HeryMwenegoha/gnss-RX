@@ -1,7 +1,7 @@
-% Author: Hery A Mwenegoha (C) 2020 UoN-University of Nottingham NGI
-% Writing this during the COVID-19 era 
+% Hery A Mwenegoha copyright (c) 2020 
 % Lite version of the Satellite File
-% Raw observables output with receiver time stamp
+% Raw observables output with receiver timestamp
+
 function DataOut = SatelliteLiteV3(varargin)
 % Reset the random number seed
 rng(1);
@@ -146,12 +146,12 @@ for idx=1:config.no_runs
         SV(i).TOC_g_time = SV_IGS(i).TOC_g_time;      % Group delay [s]
     end
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% %%%%%%%%%%%%%%%%%%%%%%%%
     % Main Inputs From File 
     %TimeOfFlight = 568800;         % secondsofGPSWEEK - 1400hrs 
     maxSeconds   = loadTrajectory; % maxFlightTimeInSeconds
+    [mprofile, y]=loadTrajectory(trajectoryFilename)
     epoch        = 0;
-    %return
 
     % Storage 
     t_record_true = zeros(0,0);
@@ -457,71 +457,6 @@ function delay=delays(Ir, Tr, Tha, Mpa, Rxa, Na, id, input, include, IonoCoeff)
     
     % add include to delay
     delay.include = include;
-end
-
-function y=loadTrajectory(src, event)    
-    % Iterated Weighted Least Squares : ECEF implementation
-    % load Tracjectory that has a very specific format.
-    % 1     [1x1 Signal]    time         October_Aircraft_ecef_ned/time         
-    % 2     [1x1 Signal]    <Xe>         October_Aircraft_ecef_ned/xn xe xd     
-    % 3     [1x1 Signal]    <U w>        October_Aircraft_ecef_ned/U w          
-    % 4     [1x1 Signal]    ''           October_Aircraft_ecef_ned/phi theta psi
-    % 5     [1x1 Signal]    <omega_ib_b> October_Aircraft_ecef_ned/omega_ib_b   
-    % 6     [1x1 Signal]    <n>          October_Aircraft_ecef_ned/n            
-    % 7     [1x1 Signal]    <windNED>    October_Aircraft_ecef_ned/windNED      
-    % 8     [1x1 Signal]    CMD          October_Aircraft_ecef_ned/CMD          
-    % 9     [1x1 Signal]    <f_ib>       October_Aircraft_ecef_ned/f_ib         
-    % 10    [1x1 Signal]    <omega_ib>   October_Aircraft_ecef_ned/omega_ib     
-    % 11    [1x1 Signal]    <lat lon>    October_Aircraft_ecef_ned/lat lon      
-    % 12    [1x1 Signal]    <hd>         October_Aircraft_ecef_ned/hd           
-    % 13    [1x1 Signal]    <Ve>         October_Aircraft_ecef_ned/Ve 
-    %file = 'SIMDATA_AEROSONDE_100Hz_[f_ib_omega_ib]_TECS2_SND2_Long_09_08_19_wen.mat';
-     
-    load(config.file); 
-    time  = simOut.time;
-    dt    = diff(time);
-    dt_avg= mean(dt);
-    
-    % TODO: specify receiver output rate and change subsampling factor
-    % respectively
-    odr   = 1;
-    ssf   = round(odr/dt_avg); 
-    
-    time  = time(1:ssf:end);
-    no_epochs = length(time);    
-    
-    mprofile.time  = time;                      % 1 second epoch
-    mprofile.lat   = simOut.lat(1:ssf:end);     % Geodetic latitude  [radians]
-    mprofile.lon   = simOut.lon(1:ssf:end);     % Geodetic longitude [radians]
-    mprofile.hd    = simOut.hd(1:ssf:end);      % Ellipsoidal height [metres]
-    mprofile.roll  = simOut.roll(1:ssf:end);    % Roll
-    mprofile.ptch  = simOut.pitch(1:ssf:end);   % Pitch
-    mprofile.yaw   = simOut.yaw(1:ssf:end);     % Yaw
-    mprofile.v_ea_n= simOut.simOut.velNED(1:ssf:end).';% velocity in ned
-    
-    % geodetic2ecef
-    a  = wgs84.A; % semimajor axis
-    e2 = wgs84.f*(2-wgs84.f);
-    
-    % Get ECEF coordinates
-    [x_ea_e, y_ea_e, z_ea_e]=ell2xyz(mprofile.lat,mprofile.lon,mprofile.hd,a,e2);  
-    if size(x_ea_e, 2) == 1
-        mprofile.r_ea_e1 = [x_ea_e, y_ea_e, z_ea_e];
-    else
-        mprofile.r_ea_e1 = [x_ea_e.', y_ea_e.', z_ea_e.'];
-    end
-    
-    % ECEF velocity
-    lat0 = simOut.lat(1);
-    lon0 = simOut.lon(1);
-    v_ea_e= zeros(size(mprofile.v_ea_n));
-    for k=1:length(xN)
-        v_ea_e(k,:) = (Rne([lat0, lon0])*mprofile.v_ea_n(k,:).').';
-    end
-    mprofile.v_ea_e  = v_ea_e;
-
-    fprintf('Trajectory Loaded... \n');
-    y=no_epochs;  
 end
 
 end
