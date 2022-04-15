@@ -1,6 +1,6 @@
 % Hery A Mwenegoha copyright (c) 2020
 
-function [mprofile, y]=loadTrajectory(trajectoryFilename)
+function [mprofile, max_seconds]=loadTrajectory(trajectoryFilename)
 % loads a trajectory with str-structure:
 % str: time
 %    : lat
@@ -52,5 +52,5 @@ end
 mprofile.v_ea_e  = v_ea_e;
 
 fprintf('Trajectory Loaded... \n');
-y=no_epochs;
+max_seconds=no_epochs;
 end
