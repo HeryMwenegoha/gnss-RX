@@ -2,22 +2,10 @@
 % version
 %   current : 1.01    19/05/2019
 %   first   : 1.00    01/07/2018
-%
 % Description
 %   WGS84 Model
-%
 % syntax
 %   y=wgs84
-%
-% input
-%
-%
-% output
-%   
-%
-% Contact
-%   email   : hery_amani@yahoo.com
-
 classdef wgs84 < handle
     properties (Constant)
         radius_equator     = 6378137;
@@ -34,12 +22,6 @@ classdef wgs84 < handle
         semimajor          = 6378137; 
         eccentricity       = 0.0818191908426215;
         c_light            = 299792458;
-    end
-    
-    methods
-        % gravity  model
-        
-        % magnetic model
     end
     
     methods(Static)
@@ -102,8 +84,8 @@ classdef wgs84 < handle
         end
         
         function varargout = ecef2geod_rad(xe, ye, ze)
-            % J. Zhu, "Conversion of Earth-centered Earth-fixed coordinates 
-            % to geodetic coordinates," IEEE Transactions on Aerospace and 
+            % J. Zhu, "Conversion of Earth-centered Earth-fixed coordinates
+            % to geodetic coordinates," IEEE Transactions on Aerospace and
             % Electronic Systems, vol. 30, pp. 957-961, 1994.
             % Heikkinen's Formula
             lambda =  atan2(ye, xe);
@@ -111,14 +93,14 @@ classdef wgs84 < handle
             x   = xe;
             y   = ye;
             z   = ze;
-
+            
             r   = sqrt(x.^2+y.^2);
             a   = wgs84.A;
             e   = wgs84.e;
             esq = e*e;
             e2  = esq;
             b   = a*sqrt(1-esq);
-
+            
             % Heikkinen's Formula
             if norm([x,y,x]) > 52000
                 Esq = (a^2-b^2)/b^2;
@@ -147,6 +129,6 @@ classdef wgs84 < handle
             varargout{1} = mu;
             varargout{2} = lambda;
             varargout{3} = hb;
-        end   
+        end
     end
 end
