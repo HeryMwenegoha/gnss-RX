@@ -225,17 +225,17 @@ classdef Tropo < handle
                 lat = Latitude_Chart(end);
             end
             
-            pressure_mean     = interp(Latitude_Chart, Pressure_Chart,     lat);
-            temperature_mean  = interp(Latitude_Chart, Temperature_Chart,  lat);
-            water_vapour_mean = interp(Latitude_Chart, water_vapor_Chart,  lat);
-            Beta_mean    = interp(Latitude_Chart, Beta_chart,         lat);
-            nu_mean      = interp(Latitude_Chart, nu_chart,           lat);
+            pressure_mean     = interp1(Latitude_Chart, Pressure_Chart,     lat, 'linear');
+            temperature_mean  = interp1(Latitude_Chart, Temperature_Chart,  lat, 'linear');
+            water_vapour_mean = interp1(Latitude_Chart, water_vapor_Chart,  lat, 'linear');
+            Beta_mean    = interp1(Latitude_Chart, Beta_chart,         lat, 'linear');
+            nu_mean      = interp1(Latitude_Chart, nu_chart,           lat, 'linear');
             
-            dpressure    = interp(Latitude_Chart, dPressure_Chart,     lat);
-            dtemperature = interp(Latitude_Chart, dTemperature_Chart,  lat);
-            dwater_vapour= interp(Latitude_Chart, dwater_vapor_Chart,  lat);
-            dBeta        = interp(Latitude_Chart, dBeta_chart,         lat);
-            dnu          = interp(Latitude_Chart, dnu_chart,           lat);
+            dpressure    = interp1(Latitude_Chart, dPressure_Chart,     lat, 'linear');
+            dtemperature = interp1(Latitude_Chart, dTemperature_Chart,  lat, 'linear');
+            dwater_vapour= interp1(Latitude_Chart, dwater_vapor_Chart,  lat, 'linear');
+            dBeta        = interp1(Latitude_Chart, dBeta_chart,         lat, 'linear');
+            dnu          = interp1(Latitude_Chart, dnu_chart,           lat, 'linear');
             
             pressure       = pressure_mean - dpressure.*cos(2.*pi.*(DOY - DOYmin)./365.25);
             temperature    = temperature_mean - dtemperature.*cos(2.*pi.*(DOY - DOYmin)./365.25);

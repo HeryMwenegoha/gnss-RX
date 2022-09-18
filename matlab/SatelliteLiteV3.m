@@ -40,7 +40,7 @@ config.baseline1   = 1;
 config.information = information;
 config.rcv2_enbaled=false;
 config.no_runs     = 1;
-config.file        = 'simulator\simple2d-03-04.mat';
+config.file        = ['simulator' filesep 'simple2d-03-04.mat'];
 %'Trajectory\SIMDATA_AEROSONDE_100Hz_[f_ib_omega_ib]_TECS2_SND2_04_04_19_wen.mat';
 
 % epoch format for 2 receivers mounted on the aircraft
