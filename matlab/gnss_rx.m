@@ -306,7 +306,7 @@ RXb(epoch+1:end)=[];
 %% Record data per simulation run
 DataOut.Iono_delay      = Iono_delay; % Only the residual
 DataOut.IonoCoefficients = IonoCoefficients;
-DataOut.Function  = 'SatelliteLiteV3';
+DataOut.Function  = 'gnss_rx';
 DataOut.include   = include;
 DataOut.RXa       = RXa;
 DataOut.RXb       = RXb;
