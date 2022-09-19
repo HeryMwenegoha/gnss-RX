@@ -40,8 +40,9 @@ config.baseline1   = 1;
 config.information = information;
 config.rcv2_enbaled=false;
 config.no_runs     = 1;
-config.file        = ['simulator' filesep 'simple2d-03-04.mat'];
+config.userFile    = ['simulator' filesep 'simple2d-03-04.mat'];
 %'Trajectory\SIMDATA_AEROSONDE_100Hz_[f_ib_omega_ib]_TECS2_SND2_04_04_19_wen.mat';
+config.ephemerisFile=['IGS' filesep 'ABMF00GLP_R_20190611300_01H_GN.rnx'];
 
 % epoch format for 2 receivers mounted on the aircraft
 fmt = struct('PRN',cell(1,32),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[]);
@@ -57,11 +58,16 @@ if nargin > 1
                     if isnumeric(varargin{id+1})
                         config.no_runs = varargin{id+1};
                     end
-                    
+                %user motion file    
                 case {'file', 'datafile', 'data'}
                     if ischar(varargin{id+1})
-                        config.file = varargin{id+1};
+                        config.userFile = varargin{id+1};
                     end
+                %ephemeris file
+                case {'ephemfile', 'efile', 'ephemeris'}
+                    if ischar(varargin{id+1})
+                        config.ephemerisFile = varargin{id+1};
+                    end                  
             end
         end
     end
@@ -69,13 +75,14 @@ elseif nargin == 1
     config.no_runs = varargin{1};
 end
 
-if isempty(config.file)
+if isempty(config.userFile)
     error('specify <trajectory|file>');
 end
 
 fprintf('Settings:\n');
-fprintf('Runs\t:\t%1u\n',config.no_runs);
-fprintf('File\t:\t%1s\n',config.file);
+fprintf('Runs\t\t:\t%1u\n',config.no_runs);
+fprintf('userMotionFile\t:\t%1s\n',config.userFile);
+fprintf('ephemerisFile\t:\t%1s\n',config.ephemerisFile);
 
 TimeLapse   = 0; % Total Time Lapse monte
 TimePerSVs  = 0;
@@ -96,8 +103,7 @@ for index=1:32
 end
 
 % Read IGS file
-[SV_IGS,IonoCoefficients] =...
-    readEphemeris('IGS/ABMF00GLP_R_20190611300_01H_GN.rnx');
+[SV_IGS,IonoCoefficients] =readEphemeris(config.ephemerisFile);
 
 % Iono coefficients used here are perturbed by 10 percent
 % user gets clean coefficients
@@ -148,7 +154,7 @@ end
 % Main Inputs From File
 % TimeOfFlight = 568800;        
 % secondsofGPSWEEK - 1400hrs
-[mprofile, maxSeconds] = loadTrajectory(config.file);
+[mprofile, maxSeconds] = loadTrajectory(config.userFile);
 epoch = 0;
 
 % Storage
