@@ -5,12 +5,12 @@ The GNSS measurement simulator is used to generate raw GNSS observables from an 
 
 ## Why use a software-based measurement simulator
 I developed this GNSS measurement simulator during my PhD with obvious reasons as to why I needed it. Some of the reasons behind it include:
-* The simulator allows comprehensive, repeatable, and cost-effective multi-system multiconstellation GNSS testing.
-* User motion and measurement generation can be tightly integrated and easily customisable in a software-based measurement simulator. 
-* Allows for ease of testing and evaluating a navigation scheme easy under different conditions leading to faster turn around times. 
-* Multiple GNSS receivers can easily be simulated, making it easy to develop and assess relative positioning systems such as RTK and PPK alongside GNSS attitude solutions. 
-* Low maintenace costs. GNSS hardware simulators are heavy and expensive units and require expensive licenses and upgrades to keep up to date.
-*  Better control of the receiver dynamics. The level of control of the receiver dynamics in a hardware simulator is fairly limited. In [3], it was shown that double differenced code residuals were affected by large biases during
+* The simulator allows `comprehensive`, `repeatable`, and `cost-effective` multi-system `multiconstellation` GNSS testing.
+* User motion and measurement generation can be `tightly integrated` and `easily customisable` in a software-based measurement simulator. 
+* Allows for `ease of testing` and evaluating a navigation scheme easy under different conditions leading to `faster turn around times`. 
+* `Multiple GNSS receivers` can easily be simulated, making it `easy to develop and assess` relative positioning systems such as RTK and PPK alongside GNSS attitude solutions. 
+* `Low maintenace costs`. GNSS hardware simulators are `heavy` and `expensive` units and require expensive licenses and upgrades to keep up to date.
+*  `Better control of the receiver dynamics`. The level of control of the receiver dynamics in a hardware simulator is fairly limited. In [3], it was shown that double differenced code residuals were affected by large biases during
 turns or when the aircraft experienced rapid accelerations. As a result, the receiver lost lock. It was argued that the operation of the receiver tracking loops was the cause of the increased residuals to cope with the level of dynamics experienced by the receiver. Since the methods used within a receiver are proprietary, it was difficult to identify the exact cause. This
 makes a software-based GNSS simulator an attractive alternative to a hardware-based one since the receiver dynamics can be added or removed as desired by the user.
 
