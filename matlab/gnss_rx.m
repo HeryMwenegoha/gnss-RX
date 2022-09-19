@@ -64,7 +64,6 @@ fprintf('userMotionFile\t:\t%1s\n',config.userFile);
 fprintf('ephemerisFile\t:\t%1s\n',config.ephemerisFile);
 
 TimeLapse   = 0; % Total Time Lapse monte
-TimePerSVs  = 0;
 %% Initialise delays
 %for idx=1:config.no_runs
 
@@ -297,42 +296,19 @@ for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*2
     % Housekeeping
     Interval   = toc;
     simulationTime_sec    = simulationTime_sec   + Interval;  % Total current lapse
-    TimeLapse  = TimeLapse + Interval;  % Total Time Lapse monte
-    TimePerSVs = TimePerSVs + Interval;
-    
-    if nSats
-        %fprintf('TimePer-32-SVs\t:\t%f\n',TimePerSVs);
-        TimePerSVs = 0;
-    end
+    TimeLapse  = TimeLapse + Interval;  % Total Time Lapse monte    
 end
 fprintf('Monte-Epoch: %1u , SimTime: %10.2f s , TimeLapse: %10.2f s \n', epoch, simulationTime_sec, TimeLapse);
 
 RXa(epoch+1:end)=[];
 RXb(epoch+1:end)=[];
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Record all the data per simulation run
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%DataOut(idx).t_record_true   = t_record_true;
-%DataOut(idx).t_record        = t_record;
-%DataOut(idx).dt_record       = dt_record;
-%DataOut(idx).t_clk_bias      = t_clk_bias;
-%DataOut(idx).t_clk_drift     = t_clk_drift;
-%DataOut.Iono_residual   = Iono_zenith_residual;
-DataOut.Iono_delay      = Iono_delay;
-%DataOut(idx).Tropo_residual  = Tropo_zenith_residual;
-%DataOut(idx).Ts_clk          = Ts_clk;
-%DataOut(idx).Tropo_delay     = Tropo_delay; % getting negative values
-%DataOut(idx).PR_record       = PR_record;
-%DataOut(idx).L1C             = L1C_record;
-%DataOut(idx).Az_record       = Az_record;
-%DataOut(idx).EL_record       = EL_record;
-%DataOut(idx).ID_record       = ID_record;
-%DataOut.information      = information;
+%% Record data per simulation run
+DataOut.Iono_delay      = Iono_delay; % Only the residual
 DataOut.IonoCoefficients = IonoCoefficients;
 DataOut.Function  = 'SatelliteLiteV3';
 DataOut.include   = include;
 DataOut.RXa       = RXa;
 DataOut.RXb       = RXb;
-DataOut.SVg_e     = SV;
+DataOut.SVg_e     = SV; % GPS ephemeris only | TODO: svG_e, svE_e, svR_e
 end
