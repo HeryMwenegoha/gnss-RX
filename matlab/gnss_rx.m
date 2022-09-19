@@ -2,7 +2,7 @@
 % Lite version of the Satellite File
 % Raw observables output with receiver timestamp
 
-function DataOut = SatelliteLiteV3(varargin)
+function DataOut = gnss_rx(varargin)
 % Reset the random number seed
 rng(1);
 
