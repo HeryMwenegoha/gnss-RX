@@ -4,7 +4,7 @@ The CDDIS directory is used to store ephemeris files files fetched from CDDIS.
 
 ## Usage
 
-* Run the `fetch.py` script available in `/pyFunctions`
+Run the `fetch.py` script available in `/pyFunctions`
 
 Note:
 
