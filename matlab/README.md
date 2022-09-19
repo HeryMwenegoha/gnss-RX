@@ -76,6 +76,20 @@ $\epsilon(\rho) = N(0,\sigma_e^2(C/N_0))$
 
 $\sigma_e = b_0 + b_1\cdot\exp(-\frac{C/N_0-b_2}{b_3})$
 
+Results using the model above are shown in the figure below. The figure shows the multiconstellation pseudorange noise obtained using Hatch filter residuals from multiconstellation dataset.
+
+![Multiconstellation pseudorange noise based on hatch filter residuals](./docs/images/Multiconstellation_pseudorange_based_on_hatch.png)
+
+## Other Models
+
+For a detailed description of other error models including: 
+* Residual `Ionospheric` error model
+* Residual `Tropospheric` error model 
+* `Multipath` model
+* `Receiver clock` error model
+
+The user is directed to [1] and [2]. 
+
 ## References
 [1] Mwenegoha, H. A., Moore, T., Pinchin, J. and Jabbal, M. (2020) ‘A Model-based
 Tightly Coupled Architecture for Low-Cost Unmanned Aerial Vehicles for
