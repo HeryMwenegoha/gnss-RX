@@ -4,7 +4,7 @@ The GNSS measurement simulator is used to generate raw GNSS observables from an 
 ![GNSS measurement simulator](./matlab/docs/images/GNSS_measurement_simulator.png)
 
 ## Why use a software-based measurement simulator
-I developed this GNSS measurement simulator during my PhD with obvious reasons as to why I needed it. Some of the motivations behind it include:
+I developed this GNSS measurement simulator during my PhD with obvious reasons as to why I needed it. Some of the reasons behind it include:
 * The simulator allows comprehensive, repeatable, and cost-effective multi-system multiconstellation GNSS testing.
 * User motion and measurement generation can be tightly integrated and easily customisable in a software-based measurement simulator. 
 * Allows for ease of testing and evaluating a navigation scheme easy under different conditions leading to faster turn around times. 
