@@ -5,13 +5,11 @@ The GNSS measurement simulator is used to generate raw GNSS observables from an 
 
 ## Measurement Models
 
-In the simulator, for a given frequency band $`i`$ (here eliminated for brevity) the pseudorange ($P_r^s$), Doppler frequency ($D_r^s$), and carrier phase (given as phase range) measurements between a satellite $`s`$ and a receiver $`r`$ are given by:
+In the simulator, for a given frequency band `i` (here eliminated for brevity) the pseudorange $P_r^s$, Doppler frequency $D_r^s$, and carrier phase (given as phase range) measurements between a satellite `s` and a receiver `r` are given by:
 
 $P_r^s = \rho_r^s + c(dt_r(t_r)-dT_s(T_s))+I_r^s + T_r^s + M_P + \epsilon(\rho)$
 
-$D_r^s = -\frac{fi}{c} \left([v_{es}^e(T_s) - v_{er}^e(t_r)]^T \cdot e_r^s + 
-c\left( \frac{\partial t_r(t_r)}{\partial t} - \frac{\partial T_s(T_s)}{\partial t} \right) + 
-\dot{I}_r^s + \dot{T}_r^s \right)  + \epsilon(f_D)$
+$D_r^s = -\frac{fi}{c} \left([v_{es}^e(T_s) - v_{er}^e(t_r)]^T \cdot e_r^s + c\left( \frac{\partial t_r(t_r)}{\partial t} - \frac{\partial T_s(T_s)}{\partial t} \right) + \dot{I}_r^s + \dot{T}_r^s \right)  + \epsilon(f_D)$
 
 $\Phi_r^s = \rho_r^s + c(dt_r(t_r)-dT_s(T_s)) - I_r^s + T_r^s + \lambda (\delta\phi + N_r^s) +\epsilon(\Phi)$
 
@@ -38,6 +36,7 @@ $\epsilon(f_D)$ - Includes multipath effects and random noise in Doppler measure
 $\epsilon(\Phi)$ - In addition to carrier phase noise, this terms also admits satellites and receiver's antenna phase centre offset and variation, any receiver  displacement due to earth tides, and phase wind-up
 
 The `measurement generation` mechanism is shown in the figure below:
+
 ![GNSS measurement generation](./docs/images/GNSS_measurement_generation.png)
 
 ## Carrier power to noise density
@@ -55,7 +54,7 @@ $G_a$ - is the antenna gain toward a satellite [dBic]
 
 Further, the thermal noise power is modelled using:
 
-$N_0 = 10log_{10}(k\cdot(T_{ant} + T_{amp}))$
+$N_0 = 10\cdot log_{10}(k\cdot(T_{ant} + T_{amp}))$
 
 where:
 
@@ -66,6 +65,7 @@ $T_{amp}$ - is the amplifier noise temperature [K] that is determined from the a
 $k$ -  is the `Boltzmann's` constant
 
 In the simulator, the $C/N_0$ measurements for a particular satellite will vary depending on the satellite elevation angle due to differences in path loss and the satellite and receiver gain pattern [1]. The `antenna gain variation with satellite elevation angle` for the simulated receiver is shown in the figure below. And the $C/N_0$ realisations are also shown for the simulated receiver.
+
 ![CNO variation with satellite elevation](./docs/images/CNO_variation_with_elevation.png)
 
 ## Thermal Noise
