@@ -380,7 +380,7 @@ classdef sat < handle
             r_es_e        = r_es_e0;
             
             % Day of the year
-            DOY           = config.information.GPSDayOfFlight;     
+            DOY           = config.DOY;     
             GR_mag_last   = 0;
             dt_s_old      = 0;
             

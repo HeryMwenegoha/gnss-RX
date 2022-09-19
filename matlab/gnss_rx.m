@@ -3,28 +3,10 @@
 % Raw observables output with receiver timestamp
 
 function DataOut = gnss_rx(varargin)
-% Reset the random number seed
+% Reset the random number seed for repeatability
 rng(1);
 
-% Passed Information for the flight or day of event
-% Should be able to decode this from the incoming msg
-information.YearOfFlight    = 2019;
-information.MonthOfFlight   = 03;
-information.DayOfFlight     = 02;
-information.GPSHourOfFlight = 14;
-information.GPSMinOfFlight  = 00;
-information.GPSSecOfFlight  = 00;
-time_flght_start            = g_time(...
-    datetime(information.YearOfFlight,...
-    information.MonthOfFlight,...
-    information.DayOfFlight,...
-    information.GPSHourOfFlight,...
-    information.GPSMinOfFlight,...
-    information.GPSSecOfFlight),...
-    0);
-information.GPSDayOfFlight = time_flght_start.g_doy;
-
-% include
+% Error models to include
 include.Random = false;
 include.Iono   = true;
 include.Tropo  = true;
@@ -34,10 +16,10 @@ include.Rx     = true;
 include.Tx     = true;
 include.N      = true;
 
-% Configs
+% User Configs | Also through varargins
 config.mask_angle  = 15;
 config.baseline1   = 1;
-config.information = information;
+config.information = [];%information;
 config.rcv2_enbaled=false;
 config.no_runs     = 1;
 config.userFile    = ['simulator' filesep 'simple2d-03-04.mat'];
@@ -49,7 +31,7 @@ fmt = struct('PRN',cell(1,32),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[]);
 RXa = struct('SOW',cell(1,600),'DOY',[],'svg',fmt,'svr',fmt);
 RXb = struct('SOW',cell(1,600),'DOY',[],'svg',fmt,'svr',fmt);
 
-
+% Loop to extract configs from varargins
 if nargin > 1
     for id = 1:nargin
         if ischar(varargin{id})
@@ -75,10 +57,7 @@ elseif nargin == 1
     config.no_runs = varargin{1};
 end
 
-if isempty(config.userFile)
-    error('specify <trajectory|file>');
-end
-
+% Some printouts
 fprintf('Settings:\n');
 fprintf('Runs\t\t:\t%1u\n',config.no_runs);
 fprintf('userMotionFile\t:\t%1s\n',config.userFile);
@@ -86,9 +65,9 @@ fprintf('ephemerisFile\t:\t%1s\n',config.ephemerisFile);
 
 TimeLapse   = 0; % Total Time Lapse monte
 TimePerSVs  = 0;
-%%
+%% Initialise delays
 %for idx=1:config.no_runs
-% Initialise delays
+
 Rxa = RXbias;
 Rxb = RXbias;
 Ir  = Iono;
@@ -121,6 +100,11 @@ nSats  = length(SV_IGS);
 % Create a cell structure
 SV     = struct('ID', cell(nSats,1));
 
+minTOC = 604800;
+maxTOC = 0;
+idxMax = 0;
+idxMin = 0;
+
 % Populate SV structure
 for i = 1:nSats
     SV(i).ID         = SV_IGS(i).ID;
@@ -148,44 +132,68 @@ for i = 1:nSats
     SV(i).A2         = SV_IGS(i).A2;       % Sv clock drift rate [seconds/seconds2]
     SV(i).TGD        = SV_IGS(i).TGD;      % Group delay [s]
     SV(i).TOC_g_time = SV_IGS(i).TOC_g_time;      % Group delay [s]
+    
+    if ~isempty(SV(i).TOC_g_time)
+        if minTOC > SV(i).TOC
+            minTOC = SV(i).TOC;
+            idxMin = i;
+        end
+        
+        if maxTOC < SV(i).TOC
+            maxTOC = SV(i).TOC;
+            idxMax = i;
+        end
+    end
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%
-% Main Inputs From File
-% TimeOfFlight = 568800;        
-% secondsofGPSWEEK - 1400hrs
+% Set my experiment time as the max TOC time
+time_flght_start = SV(idxMax).TOC_g_time;
+
+% Configure DOY
+config.DOY = time_flght_start.g_doy;
+
+% Sanity Checks
+TOE = [SV.toe];
+TOE_Diff = max(TOE) - min(TOE);
+
+TOC = [SV.TOC];
+TOC_Diff = max(TOC) - min(TOC);
+
+if TOE_Diff > 86400
+    fprintf("---------------------------\n");
+    warning("The TOE differ by %u seconds",TOE_Diff);
+    fprintf("---------------------------\n");
+end
+
+if TOC_Diff > 86400
+    fprintf("---------------------------\n");
+    warning("The TOC differ by %u seconds",TOC_Diff);
+    fprintf("---------------------------\n");
+end
+
+if any((TOC - TOE) > 0)
+    fprintf("---------------------------\n");
+    warning("Some TOCs differ from TOEs");
+    fprintf("---------------------------\n");    
+end
+
+%% Load trajectory from user motion file
 [mprofile, maxSeconds] = loadTrajectory(config.userFile);
 epoch = 0;
 
-% Storage
-t_record_true = zeros(0,0);
-t_record      = zeros(0,0);
-dt_record     = zeros(0,0);
-t_clk_bias    = zeros(0,0);
-t_clk_drift   = zeros(0,0);
+% Store Ionospheric delay
 Iono_delay    = zeros(0,0);
-%Iono_zenith_residual = zeros(0,0);
 Tropo_delay   = zeros(0,0);
-%Tropo_zenith_residual= zeros(0,0);
-%Ts_clk        = zeros(0,0);
-%GR_record     = zeros(0,0);
-%PR_record     = zeros(0,0);
-%L1C_record    = zeros(0,0);
-%Az_record     = zeros(0,0);
-%EL_record     = zeros(0,0);
-%ID_record     = zeros(0,0);
 
+% DT_step is driven by the input user motion. 
+% TODO: use navEpochPeriod to define this option externally
 DT_step = round(mean(diff(mprofile.time)));
 if DT_step >= 30
     maxSeconds = 3600 * 24;
 end
 
-for t=time_flght_start:DT_step:time_flght_start+seconds(maxSeconds)
-    %t
-end
-
 % what time are we flying : GPS time of WEEK
-SimTime     = 0; % Total current lapse
+simulationTime_sec = 0; % Total current lapse
 last_perc   = 0;
 for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*24
     tic;
@@ -288,7 +296,7 @@ for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*2
     
     % Housekeeping
     Interval   = toc;
-    SimTime    = SimTime   + Interval;  % Total current lapse
+    simulationTime_sec    = simulationTime_sec   + Interval;  % Total current lapse
     TimeLapse  = TimeLapse + Interval;  % Total Time Lapse monte
     TimePerSVs = TimePerSVs + Interval;
     
@@ -297,7 +305,7 @@ for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*2
         TimePerSVs = 0;
     end
 end
-fprintf('Monte-Epoch: %1u , SimTime: %10.2f s , TimeLapse: %10.2f s \n', epoch, SimTime, TimeLapse);
+fprintf('Monte-Epoch: %1u , SimTime: %10.2f s , TimeLapse: %10.2f s \n', epoch, simulationTime_sec, TimeLapse);
 
 RXa(epoch+1:end)=[];
 RXb(epoch+1:end)=[];
@@ -320,7 +328,7 @@ DataOut.Iono_delay      = Iono_delay;
 %DataOut(idx).Az_record       = Az_record;
 %DataOut(idx).EL_record       = EL_record;
 %DataOut(idx).ID_record       = ID_record;
-DataOut.information      = information;
+%DataOut.information      = information;
 DataOut.IonoCoefficients = IonoCoefficients;
 DataOut.Function  = 'SatelliteLiteV3';
 DataOut.include   = include;
