@@ -46,14 +46,14 @@ roll = zeros(1, length(vE));
 pitch= zeros(1, length(vE));
 yaw  = atan2(vE, vN);
 
-str.time  = time;    % 1 second epoch
-str.lat   = lat;     % Geodetic latitude  [radians]
-str.lon   = lon;     % Geodetic longitude [radians]
-str.hd    = hd;      % Ellipsoidal height [metres]
-str.roll  = roll;    % Roll
-str.pitch = pitch;   % Pitch
-str.yaw   = yaw;     % Yaw
-str.velNED= [vN; vE; vD];  % velocity in ned
+str.time  = time;         % 1 second epoch
+str.lat   = lat;          % Geodetic latitude   [radians]
+str.lon   = lon;          % Geodetic longitude  [radians]
+str.hd    = hd;           % Ellipsoidal height  [metres]
+str.roll  = roll;         % Roll                [radians]
+str.pitch = pitch;        % Pitch               [radians]
+str.yaw   = yaw;          % Yaw                 [radians]
+str.velNED= [vN; vE; vD]; % velocity in ned     [metres-per-second]
 
 %save('simulator/simple2d-03-04.mat','str');
 
