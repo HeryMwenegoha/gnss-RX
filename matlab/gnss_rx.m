@@ -181,8 +181,8 @@ end
 epoch = 0;
 
 % Store Ionospheric delay
-Iono_delay    = zeros(0,0);
-Tropo_delay   = zeros(0,0);
+Iono_delay = zeros(0,0);
+Tropo_delay= zeros(0,0);
 
 % DT_step is driven by the input user motion. 
 % TODO: use navEpochPeriod to define this option externally
@@ -191,7 +191,7 @@ if DT_step >= 30
     maxSeconds = 3600 * 24;
 end
 
-% what time are we flying : GPS time of WEEK
+% Main computation loop
 simulationTime_sec = 0; % Total current lapse
 last_perc   = 0;
 for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*24
@@ -226,14 +226,13 @@ for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*2
     % calculate satellite positions at time of transmission - t
     increment = 0;
     for im=1:nSats
-        %id
         if isempty(SV(im).ID) == true
             continue;
         end
         
         id = SV(im).ID;
          
-        % Pseudorange
+        % Get classes
         class.config    = config;
         class.include   = include;
         class.IonoCoeff = IonoCoeff;
@@ -247,8 +246,10 @@ for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*2
         class.v_e       = v_ea_e1;
         class.att       = att;
         
+        % Compute measurements
         [gT_r,C1C,L1C,D1C,LLI]=sat.PR(SV, id,t,class);
         
+        % Store measurements if OK
         if ~isnan(C1C)
             % Receiver data holder
             % -- LLI - flag
@@ -277,7 +278,7 @@ for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*2
         end
         
     end
-    %}
+    
     % RX-A CLOCK MODEL
     Rxa.common;
     
