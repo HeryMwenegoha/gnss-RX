@@ -1,7 +1,7 @@
 ## GNSS Measurement Simulator
 The GNSS measurement simulator is used to generate raw GNSS observables from an input file containing the simulated navigation solution of the receiver and an associated ephemeris file retrievied from CDDIS. The GNSS measurement simulator then uses this information to generate raw GNSS observables.
 
-![GNSS measurement simulator](./docs/images/GNSS_measurement_simulator.png)
+![GNSS measurement simulator](./matlab/docs/images/GNSS_measurement_simulator.png)
 
 ## Measurement Models
 
@@ -37,7 +37,7 @@ $\epsilon(\Phi)$ - In addition to carrier phase noise, this terms also admits sa
 
 The `measurement generation` mechanism is shown in the figure below:
 
-![GNSS measurement generation](./docs/images/GNSS_measurement_generation.png)
+![GNSS measurement generation](./matlab/docs/images/GNSS_measurement_generation.png)
 
 ## Carrier power to noise density
 In addition to the measurements above, the simulator also outputs the `carrier power to noise density ratio` given by:
@@ -66,7 +66,7 @@ $k$ -  is the `Boltzmann's` constant
 
 In the simulator, the $C/N_0$ measurements for a particular satellite will vary depending on the satellite elevation angle due to differences in path loss and the satellite and receiver gain pattern [1]. The `antenna gain variation with satellite elevation angle` for the simulated receiver is shown in the figure below. And the $C/N_0$ realisations are also shown for the simulated receiver.
 
-![CNO variation with satellite elevation](./docs/images/CNO_variation_with_elevation.png)
+![CNO variation with satellite elevation](./matlab/docs/images/CNO_variation_with_elevation.png)
 
 ## Thermal Noise
 
@@ -78,7 +78,7 @@ $\sigma_e = b_0 + b_1\cdot\exp(-\frac{C/N_0-b_2}{b_3})$
 
 Results using the model above are shown in the figure below. The figure shows the multiconstellation pseudorange noise obtained using Hatch filter residuals from multiconstellation dataset.
 
-![Multiconstellation pseudorange noise based on hatch filter residuals](./docs/images/Multiconstellation_pseudorange_based_on_hatch.png)
+![Multiconstellation pseudorange noise based on hatch filter residuals](./matlab/docs/images/Multiconstellation_pseudorange_based_on_hatch.png)
 
 ## Other Models
 
@@ -92,7 +92,7 @@ The user is directed to [1] and [2].
 
 ## Usage
 
-1. To fetch ephemeris files, it is recommended to use the `fetch.py` script. This will store any retrieved files in the CDDIS folder. For additional information, please refer to [Fetching files](./CDDIS/README.md)
+1. To fetch ephemeris files, it is recommended to use the `fetch.py` script. This will store any retrieved files in the CDDIS folder. For additional information, please refer to [Fetching files](./matlab/CDDIS/README.md)
 
 ## References
 [1] Mwenegoha, H. A., Moore, T., Pinchin, J. and Jabbal, M. (2020) ‘A Model-based
