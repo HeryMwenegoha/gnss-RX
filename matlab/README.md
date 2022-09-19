@@ -90,6 +90,10 @@ For a detailed description of other error models including:
 
 The user is directed to [1] and [2]. 
 
+## Usage
+
+1. To fetch ephemeris files, it is recommended to use the `fetch.py` script. This will store any retrieved files in the CDDIS folder. For additional information, please refer to [Fetching files](./CDDIS/README.md)
+
 ## References
 [1] Mwenegoha, H. A., Moore, T., Pinchin, J. and Jabbal, M. (2020) ‘A Model-based
 Tightly Coupled Architecture for Low-Cost Unmanned Aerial Vehicles for
