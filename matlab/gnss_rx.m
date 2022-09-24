@@ -81,10 +81,12 @@ for index=1:32
 end
 
 % Read IGS file
+fprintf('-- reading Ephemeris -- \n');
 [SV_IGS,IonoCoefficients] =readEphemeris(config.ephemerisFile);
 
 % Iono coefficients used here are perturbed by 10 percent
 % user gets clean coefficients
+fprintf('-- perturbing iono coefficients -- \n');
 IonoCoeff.alpha  = IonoCoefficients.alpha + ...
     IonoCoefficients.alpha.*0.1.*randn(1,4);
 IonoCoeff.beta   = IonoCoefficients.beta + ...
@@ -146,6 +148,7 @@ for i = 1:nSats
 end
 
 % Set my experiment time as the max TOC time
+fprintf('-- set exp start time from max TOC -- \n');
 time_flght_start = SV(idxMax).TOC_g_time;
 
 % Configure DOY
@@ -192,6 +195,7 @@ if DT_step >= 30
 end
 
 % Main computation loop
+fprintf('-- start simulation -- \n');
 simulationTime_sec = 0; % Total current lapse
 last_perc   = 0;
 for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*24
@@ -299,7 +303,9 @@ for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*2
     simulationTime_sec    = simulationTime_sec   + Interval;  % Total current lapse
     TimeLapse  = TimeLapse + Interval;  % Total Time Lapse monte    
 end
-fprintf('Monte-Epoch: %1u , SimTime: %10.2f s , TimeLapse: %10.2f s \n', epoch, simulationTime_sec, TimeLapse);
+fprintf('-- simulation finished -- \n');
+fprintf('-- simulation report -- \n');
+fprintf('Epoch: %1u , SimTime: %10.2f s , TimeLapse: %10.2f s \n', epoch, simulationTime_sec, TimeLapse);
 
 RXa(epoch+1:end)=[];
 RXb(epoch+1:end)=[];
