@@ -18,9 +18,7 @@
 % output
 %   y   : time delay/advance due to ionospheric effect
 classdef Multipath < handle
-    properties(Constant)    
-        delta_t   =  1;
-        %Tau      = 40;
+    properties(Constant)
         C0        = 0.47;  %[m]
         C1        = 0.78;  %[m]
         C2        = 20.92; %[deg]
@@ -39,43 +37,48 @@ classdef Multipath < handle
     
     properties
         Tau;
+        delta_t;
     end
     
     methods
-        function this=Multipath
-            this.Tau          = randi([3,40],1); 
+        % Constructor
+        function this = Multipath(delta_t)
+            arguments
+                delta_t (1,1) double  =  1; % sample rate [s]
+            end
+            this.Tau          = randi([3,40],1);
             this.residual     = 0;
             this.residual_ca  = 0;
             this.residual_ca_old = 0;
+            this.delta_t = delta_t;
         end
         
         % Pseudorange multipath [seconds]
         function Mp = delay(this, input, params)
-            El              = input.EL_degrees; 
+            El              = input.EL_degrees;
             % Standard deviation of driving noise
             sigma_mp        = this.C0 + this.C1.*exp(-El./this.C2);
             qk              = sigma_mp.^2*(1 - exp(-2*this.delta_t/this.Tau));
             this.residual   = this.residual.*exp(-this.delta_t/this.Tau) + randn*sqrt(qk); %[m]
             Mp              = this.residual./wgs84.c; %[s]
-        end 
+        end
         
         % Carrier phase mutlipath [s]
         function Mp = delay_ca(this, input, params)
-            El      = input.EL_degrees; 
+            El      = input.EL_degrees;
             
             % Standard deviation of driving noise
-            sigma_mp = this.C0_ca +...
-                       this.C1_ca.*exp(-El./this.C2_ca);
+            sigma_mp = this.C0_ca + this.C1_ca.*exp(-El./this.C2_ca);
             qk       = sigma_mp.^2*(1 - exp(-2*this.delta_t/this.Tau));
-            this.residual_ca_old=this.residual_ca; 
+            this.residual_ca_old=this.residual_ca;
             this.residual_ca= this.residual_ca.*exp(-this.delta_t/this.Tau)...
-                             + randn*sqrt(qk); %[m]
+                + randn*sqrt(qk);                 %[m]
             Mp       = this.residual_ca./wgs84.c; %[s]
         end
         
         % No units - Meant for the doppler measurements
         function y = ddelay(this)
-            y = ((this.residual_ca - this.residual_ca_old)./wgs84.c)./this.delta_t; 
+            y = ((this.residual_ca - this.residual_ca_old)./wgs84.c)./this.delta_t;
         end
     end
 end
