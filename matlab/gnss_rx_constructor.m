@@ -24,6 +24,7 @@ config.no_runs     = 1;
 config.userFile    = ['simulator' filesep 'simple2d-03-04.mat'];
 %'Trajectory\SIMDATA_AEROSONDE_100Hz_[f_ib_omega_ib]_TECS2_SND2_04_04_19_wen.mat';
 config.ephemerisFile=['IGS' filesep 'ABMF00GLP_R_20190611300_01H_GN.rnx'];
+config.odr_Hz      = 1;
 
 % epoch format for 2 receivers mounted on the aircraft
 fmt = struct('PRN',cell(1,32),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[]);
@@ -35,20 +36,29 @@ if nargin > 1
     for id = 1:nargin
         if ischar(varargin{id})
             switch(varargin{id})
+                % number of runs
                 case {'nruns', 'noruns', 'runs', 'run'}
                     if isnumeric(varargin{id+1})
                         config.no_runs = varargin{id+1};
                     end
-                %user motion file    
+                    
                 case {'file', 'datafile', 'data'}
+                    %user motion file
                     if ischar(varargin{id+1})
                         config.userFile = varargin{id+1};
                     end
-                %ephemeris file
+                    
                 case {'ephemfile', 'efile', 'ephemeris'}
+                    %ephemeris file
                     if ischar(varargin{id+1})
                         config.ephemerisFile = varargin{id+1};
-                    end                  
+                    end
+                    
+                case {'odr', 'odr_Hz', 'odrHz', 'ODR'}
+                    %output data rate
+                    if isnumeric(varargin{id+1})
+                        config.odr_Hz = varargin{id+1};
+                    end
             end
         end
     end
@@ -63,14 +73,15 @@ fprintf('userMotionFile\t:\t%1s\n',config.userFile);
 fprintf('ephemerisFile\t:\t%1s\n',config.ephemerisFile);
 
 %% Initialise delays for our receiver
-gnssObj.Rxa = RXbias;
-gnssObj.Ir  = Iono;
-gnssObj.Tr  = Tropo;
-gnssObj.Tha = RXthermal;
-gnssObj.Thb = RXthermal;
+dtRx_s      = 1/config.odr_Hz;
+gnssObj.Rxa = RXbias(dtRx_s);
+gnssObj.Ir  = Iono(dtRx_s);
+gnssObj.Tr  = Tropo(dtRx_s);
+gnssObj.Tha = RXthermal(dtRx_s);
+gnssObj.Thb = RXthermal(dtRx_s);
 for index=1:32
-    gnssObj.Mpa(index)=Multipath;% multipath class
-    gnssObj.Na(index) =Nr;       % integer ambiguity class
+    gnssObj.Mpa(index) = Multipath(dtRx_s);% multipath class
+    gnssObj.Na(index)  = Nr;               % integer ambiguity class
 end
 
 %% Read IGS file

@@ -1,6 +1,6 @@
 % Hery A Mwenegoha copyright (c) 2020
 
-function [mprofile, max_seconds]=loadTrajectory(trajectoryFilename)
+function [mprofile, max_seconds]=loadTrajectory(trajectoryFilename, odr_Hz)
 % loads a trajectory with str-structure:
 % str: time
 %    : lat
@@ -12,15 +12,17 @@ function [mprofile, max_seconds]=loadTrajectory(trajectoryFilename)
 %    : v_ea_n : NED  position of the receiver
 %    : r_ea_e : ECEF position of the receiver
 %    : v_ea_e : ECEF velocity of the receiver
+arguments
+    trajectoryFilename char
+    odr_Hz (1,1) double = 1; % receiver output data rate [Hz]
+end
 load(trajectoryFilename);
 time  = str.time;
 dt    = diff(time);
 dt_avg= mean(dt);
 
-% TODO: specify receiver output rate and change subsampling factor
-% respectively
-odr   = 1;
-ssf   = round(odr/dt_avg);
+% sample the trajectory based on odr
+ssf   = round(1/dt_avg/odr_Hz);
 
 time  = time(1:ssf:end);
 no_epochs = length(time);
