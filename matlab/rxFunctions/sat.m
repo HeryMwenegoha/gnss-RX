@@ -63,8 +63,6 @@ classdef sat < handle
             % we need the ephemeris of this satellite
             SV_ = SVg_e(id);
             
-            Delta_n  = SV_.dn; % mean motion correction
-            
             % Time objects
             if ~isa(Tst, 'gTime')
                 gTst = gTime(Tst);
@@ -84,6 +82,10 @@ classdef sat < handle
             %delta_t = Tst-SV_.toe;
             delta_t  = gTst-gToe;
             
+            if (delta_t*1) > 3600*4
+                %fprintf('...prn %u has outdated toe \n',id);
+            end
+            
             % week crossover check
             if abs(delta_t*1) > 302400
                 % 604800 correction for week crossover
@@ -95,10 +97,13 @@ classdef sat < handle
                 warning('Week crossover detected <calculate_satpos>');
             end
             
-            % Current Mean anomaly and Mean Motion Correction
+            % constants
             mu  = wgs84.mu;
             wis = sqrt(mu/SV_.a^3);
-            M   = SV_.Mo + (wis + Delta_n)*delta_t;
+            % mean motion correction
+            Delta_n = SV_.dn;
+            % mean anomally
+            M = SV_.Mo + (wis + Delta_n)*delta_t;
             
             % Eccentric anomally from keplers equation
             eo   = SV_.eo;
@@ -110,7 +115,7 @@ classdef sat < handle
             % True anomally
             v = atan2(sqrt(1-eo^2)*sin(E)/(1-eo*cos(E)),...
                 (cos(E)-eo)/(1-eo*cos(E)));
-            
+
             % Argument of latitude
             Theta = SV_.w+v; % Angle of satellite from right ascension
             
@@ -122,7 +127,7 @@ classdef sat < handle
             Crc   = SV_.Crc;
             Cus   = SV_.Cus;
             Cuc   = SV_.Cuc;
-            
+                        
             % Orbital radius and argument of latitude
             r_os  = a*(1-eo*cos(E)) + Crs*sin(2*Theta) + Crc*cos(2*Theta);
             u_os  = Theta           + Cus*sin(2*Theta) + Cuc*cos(2*Theta);
@@ -174,8 +179,8 @@ classdef sat < handle
             
             % Orbital frame to ECEF frame
             Roe    = [cos(OMEGA) -cos(Incl)*sin(OMEGA)  sin(Incl)*sin(OMEGA); ...
-                sin(OMEGA)  cos(Incl)*cos(OMEGA) -sin(Incl)*cos(OMEGA); ...
-                0           sin(Incl)             cos(Incl)];
+                      sin(OMEGA)  cos(Incl)*cos(OMEGA) -sin(Incl)*cos(OMEGA); ...
+                      0           sin(Incl)             cos(Incl)];
             
             % ECEF frame position
             r_es_e = Roe * r_os_o;
@@ -342,7 +347,7 @@ classdef sat < handle
             Ek = E;
         end
         
-        function [gTr_o, C1C, L1C, D1C, LLI]=PR(SV,id,trcv,class)
+        function [gTr_o, C1C, L1C, D1C, LLI, cn0, r_es_e, v_es_e, dTs, ddTs]=PR(SV,id,trcv,class)
             % Simulate Pseudorange & Carrier Phase
             % Calculate actual transmission time
             % Return actual satellite position
@@ -480,7 +485,8 @@ classdef sat < handle
             gTr_o = gTr + gTime(0,Rx_delay);
             gTs_o = gTs + gTime(0,dTs);
             
-             if input.EL_degrees < config.mask_angle 
+            cn0 = CNO.cno(input.EL_degrees);
+            if input.EL_degrees < config.mask_angle
                 % cant produce measurements
                 % fprintf('PRN %1u below mask angle \n', SV(id).ID);
                 C1C = NaN;
@@ -488,7 +494,7 @@ classdef sat < handle
                 D1C = NaN;
                 LLI = [];
                 return;
-             end           
+            end
 
              sagnac_rate  = Sagnac.rate(r_ea_e, v_ea_e, r_es_e, v_es_e);
              
