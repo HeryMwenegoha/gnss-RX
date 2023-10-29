@@ -67,7 +67,7 @@ for nPRN=1:nSats
     class.att       = att;
     
     % Compute measurements
-    [gT_r,C1C,L1C,D1C,LLI]=sat.PR(svGps, id,t,class);
+    [gT_r,C1C,L1C,D1C,LLI,cn0, satPos, satVel, dTs, ddTs]=sat.PR(svGps, id,t,class);
     
     % Store measurements if OK
     if ~isnan(C1C)
@@ -81,11 +81,16 @@ for nPRN=1:nSats
         rawxSoln.svg(id).L1C = L1C;
         rawxSoln.svg(id).D1C = D1C;
         rawxSoln.svg(id).S1C = [];
+        rawxSoln.svg(id).cn0 = cn0;
         rawxSoln.svg(id).LLI = LLI;
+        rawxSoln.svg(id).pos = satPos;
+        rawxSoln.svg(id).vel = satVel;
+        rawxSoln.svg(id).clkBias_m = dTs*wgs84.c_light;
+        rawxSoln.svg(id).clkDrift_mps = ddTs*wgs84.c_light;
         rawxSoln.bias_m      = gnssObj.Rxa.delay*wgs84.c;
         rawxSoln.drift_mps   = gnssObj.Rxa.ddelay*wgs84.c;
         rawxSoln.pos_ecef    = r_ea_e1;
-        rawxSoln.vel_ecef    = v_ea_e1;        
+        rawxSoln.vel_ecef    = v_ea_e1;
     end
     
 end
