@@ -1,84 +1,44 @@
-% Hery A Mwenegoha copyright (c) 2020
+% Copyright © Hery A Mwenegoha copyright 2020 - 2024
 
-function gnssObj = gnss_rx_constructor(varargin)
+function gnssObj = gnss_rx_constructor(config)
 % This a constructor function to allow running the GNSS measurement
 % simulator in closed-loop mode. This is more representative of how the
-% real-time implementation would work. 
-
-% Error models to include
-include.Random = false;
-include.Iono   = true;
-include.Tropo  = true;
-include.MP     = true;
-include.Th     = true;
-include.Rx     = true;
-include.Tx     = true;
-include.N      = true;
-
-% User Configs | Also through varargins
-config.mask_angle  = 15;
-config.baseline1   = 1;
-config.information = [];%information;
-config.rcv2_enbaled=false;
-config.no_runs     = 1;
-config.userFile    = ['simulator' filesep 'simple2d-03-04.mat'];
-%'Trajectory\SIMDATA_AEROSONDE_100Hz_[f_ib_omega_ib]_TECS2_SND2_04_04_19_wen.mat';
-config.ephemerisFile=['IGS' filesep 'ABMF00GLP_R_20190611300_01H_GN.rnx'];
-config.odr_Hz      = 1;
-
-% epoch format for 2 receivers mounted on the aircraft
-fmt = struct('PRN',cell(1,32),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[]);
-RXa = struct('SOW',cell(1,600),'DOY',[],'svg',fmt,'svr',fmt);
-RXb = struct('SOW',cell(1,600),'DOY',[],'svg',fmt,'svr',fmt);
-
-% Loop to extract configs from varargins
-if nargin > 1
-    for id = 1:nargin
-        if ischar(varargin{id})
-            switch(varargin{id})
-                % number of runs
-                case {'nruns', 'noruns', 'runs', 'run'}
-                    if isnumeric(varargin{id+1})
-                        config.no_runs = varargin{id+1};
-                    end
-                    
-                case {'file', 'datafile', 'data'}
-                    %user motion file
-                    if ischar(varargin{id+1})
-                        config.userFile = varargin{id+1};
-                    end
-                    
-                case {'ephemfile', 'efile', 'ephemeris'}
-                    %ephemeris file
-                    if ischar(varargin{id+1})
-                        config.ephemerisFile = varargin{id+1};
-                    end
-                    
-                case {'odr', 'odr_Hz', 'odrHz', 'ODR'}
-                    %output data rate
-                    if isnumeric(varargin{id+1})
-                        config.odr_Hz = varargin{id+1};
-                    end
-            end
-        end
-    end
-elseif nargin == 1
-    config.no_runs = varargin{1};
+% real-time implementation would work.
+arguments
+    config.mask_angle    = 15;    % mask angle [degrees]
+    config.baseline1     = 1;     % baseline
+    config.information   = [];    % information
+    config.rcv2_enbaled  = false; % enable second receiver
+    config.odr_Hz        = 1;     % output data rate
+    config.incRnd        = false; % include random noise
+    config.incIono       = true;  % include iono delays
+    config.incTropo      = true;  % include tropo delays
+    config.incMp         = true;  % include multipath
+    config.incTh         = true;  % include thermal noise
+    config.incRxClk      = true;  % include receiver clock errors e.g. if
+                                  % false then the clockBias and clockDrift
+                                  % will be zero
+    config.incTxClk      = true;  % include satellite clock errors.
+                                  % is not using the mask
+    config.incNcyc       = true;  % include integer number of cycles in
+                                  % carrier-phase measurements
+    config.userFile      = ['simulator' filesep 'simple2d-03-04.mat'];            %'Trajectory\SIMDATA_AEROSONDE_100Hz_[f_ib_omega_ib]_TECS2_SND2_04_04_19_wen.mat';
+    config.ephemerisFile = ['IGS' filesep 'ABMF00GLP_R_20190611300_01H_GN.rnx'];  % sample ephemeris file
+    config.no_runs       = 1;     % [NOT USED] number of runs
 end
 
 % Some printouts
 fprintf('Settings:\n');
-fprintf('Runs\t\t:\t%1u\n',config.no_runs);
 fprintf('userMotionFile\t:\t%1s\n',config.userFile);
 fprintf('ephemerisFile\t:\t%1s\n',config.ephemerisFile);
 
 %% Initialise delays for our receiver
-dtRx_s      = 1/config.odr_Hz;
-gnssObj.Rxa = RXbias(dtRx_s);
-gnssObj.Ir  = Iono(dtRx_s);
-gnssObj.Tr  = Tropo(dtRx_s);
-gnssObj.Tha = RXthermal(dtRx_s);
-gnssObj.Thb = RXthermal(dtRx_s);
+dtRx_s        = 1/config.odr_Hz;
+gnssObj.RxaClk= RXbias(dtRx_s);
+gnssObj.Ir    = Iono(dtRx_s);
+gnssObj.Tr    = Tropo(dtRx_s);
+gnssObj.Tha   = RXthermal(dtRx_s);
+gnssObj.Thb   = RXthermal(dtRx_s);
 for index=1:32
     gnssObj.Mpa(index) = Multipath(dtRx_s);% multipath class
     gnssObj.Na(index)  = Nr;               % integer ambiguity class
@@ -86,7 +46,7 @@ end
 
 %% Read IGS file
 fprintf('-- reading Ephemeris -- \n');
-[SV_IGS,IonoCoefficients] =readEphemeris(config.ephemerisFile);
+[SV_IGS,IonoCoefficients] = readEphemeris(config.ephemerisFile);
 
 %% Iono coefficients used here are perturbed by 10 percent
 % user gets clean coefficients
@@ -103,7 +63,7 @@ gnssObj.IonoCoeff = IonoCoeff;
 SV_IGS(25);
 
 % Number of Satellites loaded
-nSats  = length(SV_IGS);
+nSats = length(SV_IGS);
 
 % Create a cell structure
 SV  = struct('ID', cell(nSats,1));
@@ -140,13 +100,13 @@ for i = 1:nSats
     SV(i).A2         = SV_IGS(i).A2;       % Sv clock drift rate [seconds/seconds2]
     SV(i).TGD        = SV_IGS(i).TGD;      % Group delay [s]
     SV(i).TOC_g_time = SV_IGS(i).TOC_g_time;      % Group delay [s]
-    
+
     if ~isempty(SV(i).TOC_g_time)
         if minTOC > SV(i).TOC
             minTOC = SV(i).TOC;
             idxMin = i;
         end
-        
+
         if maxTOC < SV(i).TOC
             maxTOC = SV(i).TOC;
             idxMax = i;
@@ -188,11 +148,8 @@ end
 if any((TOC - TOE) > 0)
     fprintf("---------------------------\n");
     warning("Some TOCs differ from TOEs");
-    fprintf("---------------------------\n");    
+    fprintf("---------------------------\n");
 end
-
-% Store the errors to include
-gnssObj.include = include;
 
 % Store the configurations
 gnssObj.config = config;

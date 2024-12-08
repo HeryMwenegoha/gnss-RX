@@ -360,7 +360,6 @@ classdef sat < handle
             %   includes and other configs
             % Useable SV classes
             config    = class.config;
-            include   = class.include;
             IonoCoeff = class.IonoCoeff;
             Ir        = class.Ir;
             Tr        = class.Tr;
@@ -454,32 +453,33 @@ classdef sat < handle
             EL_apparent = -asin(zb * e_us_n);
             Nn.slip(EL_apparent*math.degreesf);
             %}
-            
+
             % Calculated C1C delays
-            Ir_delay    = Ir.delay(input,IonoCoeff)  * include.Iono;
-            Tr_delay    = Tr.delay(input)            * include.Tropo; 
-            Th_delay    = Th.delay(input)            * include.Th;  
-            Mp_delay    = Mp.delay(input)            * include.MP;   
-            Rx_delay    = Rx.delay                   * include.Rx;   
-            Ts_delay    = dTs                        * include.Tx; 
-            Rnd_delay   = (randn * 0.1)./wgs84.c     * include.Random;
+            Ir_delay    = Ir.delay(input,IonoCoeff)  * config.incIono;
+            Tr_delay    = Tr.delay(input)            * config.incTropo; 
+            Th_delay    = Th.delay(input)            * config.incTh;  
+            Mp_delay    = Mp.delay(input)            * config.incMp;   
+            Rx_delay    = Rx.delay                   * config.incRxClk;   
+            Ts_delay    = dTs                        * config.incTxClk; 
+            Rnd_delay   = (randn * 0.1)./wgs84.c     * config.incRnd;
             
             % Calculated carrier-phase delays
-            Ir_delay_ca =  Ir.delay(input,IonoCoeff) * include.Iono;    
-            Tr_delay_ca =  Tr.delay(input)           * include.Tropo;
-            Th_delay_ca =  Th.delay_ca(input)        * include.Th;
-            Mp_delay_ca =  Mp.delay_ca(input)        * include.MP;
-            Rx_delay_ca =  Rx.delay                  * include.Rx;
-            Ts_delay_ca =  dTs                       * include.Tx;
-            Rnd_delay_ca=  randn * 0.0               * include.Random;
-            N_integer   =  Nn.N                      * include.N; % cycles   
+            Ir_delay_ca =  Ir.delay(input,IonoCoeff) * config.incIono;    
+            Tr_delay_ca =  Tr.delay(input)           * config.incTropo;
+            Th_delay_ca =  Th.delay_ca(input)        * config.incTh;
+            Mp_delay_ca =  Mp.delay_ca(input)        * config.incMp;
+            Rx_delay_ca =  Rx.delay                  * config.incRxClk;
+            Ts_delay_ca =  dTs                       * config.incTxClk;
+            Rnd_delay_ca=  randn * 0.0               * config.incRnd;
+            N_integer   =  Nn.N                      * config.incNcyc; % cycles   
             
             % Delays for the Doppler Measurements
-            Rx_delay_dd = Rx.ddelay                  * include.Rx; 
-            Ir_delay_dd = Ir.ddelay                  * include.Iono;
-            Tr_delay_dd = Tr.ddelay                  * include.Tropo;
-            Mp_delay_dd = Mp.ddelay                  * include.MP; 
-            Th_delay_dd = Th.ddelay                  * include.Th;
+            Rx_delay_dd = Rx.ddelay                  * config.incRxClk; 
+            Ir_delay_dd = Ir.ddelay                  * config.incIono;
+            Tr_delay_dd = Tr.ddelay                  * config.incTropo;
+            Mp_delay_dd = Mp.ddelay                  * config.incMp; 
+            Th_delay_dd = Th.ddelay                  * config.incTh;
+            txClkDrift_sps = ddTs                    * config.incTxClk;
             
             % Corrupt Receiver Time | Common Error on Each PR Value
             gTr_o = gTr + gTime(0,Rx_delay);
@@ -519,11 +519,11 @@ classdef sat < handle
              D1C = -f1./wgs84.c * ([v_es_e - v_ea_e].'*GR_unit +...
                  sagnac_rate                 +...
                  wgs84.c*Rx_delay_dd         -...
-                 wgs84.c*ddTs                +...
+                 wgs84.c*txClkDrift_sps      +...
                  wgs84.c*Ir_delay_dd         +...
                  wgs84.c*Tr_delay_dd         +...
                  wgs84.c*Th_delay_dd         +...
-                 wgs84.c*Mp_delay_dd)         +...
+                 wgs84.c*Mp_delay_dd)        +...
                  randn*1.0; % 0.02
                               
             % Try to detect any cycle slips
