@@ -1,11 +1,11 @@
-% Copyright © Hery A Mwenegoha copyright 2020 - 2024
+% Copyright © Hery A Mwenegoha © 2020 - 2025
 
 function gnssObj = gnss_rx_constructor(config)
 % This a constructor function to allow running the GNSS measurement
 % simulator in closed-loop mode. This is more representative of how the
 % real-time implementation would work.
 arguments
-    config.mask_angle    = 15;    % mask angle [degrees]
+    config.mask_angle    = 2;     % mask angle [degrees]
     config.baseline1     = 1;     % baseline
     config.information   = [];    % information
     config.rcv2_enbaled  = false; % enable second receiver

@@ -1,4 +1,4 @@
-% Copyright © Hery A Mwenegoha copyright 2020 - 2024
+% Copyright © Hery A Mwenegoha © 2020 - 2025
 
 function [gnssObj,rawxSoln] = gnss_rx_update(gnssObj, current_SOW, posEcef, velEcef, Rpy)
 % This function is called every navEpoch to compute the raw GNSS
