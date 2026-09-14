@@ -34,7 +34,7 @@ classdef CNO < handle
             No  = -201;    %[dB-Hz]
             
             % Standard deviation of received noise
-            SD  =    1;    %[dB]
+            SD  =  1.2;    %[dB]
             
             % output
             c   = Pr + Ga - No  + SD*randn;
