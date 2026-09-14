@@ -37,6 +37,7 @@ classdef Gnss < handle
         Mpa    Multipath;      % Multipath model
         Na     Nr;             % Carrier-phase integer ambiguity
         svGps  struct;
+        obs    struct;
     end
 
     methods
@@ -85,7 +86,10 @@ classdef Gnss < handle
             % Set my experiment time as the max TOC time
             if obj.gpsStartTime_s == g_time(datetime(2019,03,02,13,00,00))
                 fprintf('...set exp start time from max TOC \n');
-                [~,idxMax]   = max([obj.svGps.TOC]);
+                tocValues = nan(1, length(obj.svGps));
+                hasToc    = ~arrayfun(@(s) isempty(s.TOC), obj.svGps);
+                tocValues(hasToc) = [obj.svGps(hasToc).TOC];
+                [~,idxMax]   = max(tocValues);
                 expStartTime = obj.svGps(idxMax).TOC_g_time;
                 obj.gpsStartTime_s = expStartTime;
                 disp(obj.gpsStartTime_s);
@@ -122,6 +126,9 @@ classdef Gnss < handle
             % Current epoch g_time
             t = current_SOW;
 
+            % initialise rawxSoln
+            rawxSoln = Gnss.emptyObs();
+
             % Get the current receiver position from the Navigation engine
             r_ea_e1   = posEcef; % 3x1
             v_ea_e1   = velEcef; % 3x1
@@ -154,54 +161,64 @@ classdef Gnss < handle
             config.incNcyc    = obj.incNcyc;
 
             % calculate satellite positions at time of transmission - t
-            for nPRN=1:nSats
-                if isempty(obj.svGps(nPRN).ID) == true
+            for iPrn=1:nSats
+                if isempty(obj.svGps(iPrn).ID)
                     continue;
                 end
 
-                id = obj.svGps(nPRN).ID;
+                prn = obj.svGps(iPrn).ID;
 
                 % Get classes
                 class.config    = config;
                 class.IonoCoeff = obj.IonoCoeff;
                 class.Ir        = obj.Ir;
                 class.Tr        = obj.Tr;
-                class.Mp        = obj.Mpa(id);
+                class.Mp        = obj.Mpa(prn);
                 class.Th        = obj.Tha;
                 class.Rx        = obj.RxaClk;
-                class.Nn        = obj.Na(id);
+                class.Nn        = obj.Na(prn);
                 class.r_e       = r_ea_e1;
                 class.v_e       = v_ea_e1;
                 class.att       = att;
 
                 % Compute measurements
-                [gT_r,C1C,L1C,D1C,LLI,cn0, satPos, satVel, dTs, ddTs]=sat.PR(obj.svGps, id,t,class);
+                [gT_r,C1C,L1C,D1C,LLI,cn0, satPos, satVel, dTs, ddTs]=sat.PR(obj.svGps, prn,t,class);
 
                 % Store measurements if OK
                 if ~isnan(C1C)
                     % Receiver data holder
-                    % -- LLI - flag
-                    rawxSoln.gTr         = gT_r;
-                    rawxSoln.SOW         = gT_r*1;       % can be presented ok
-                    rawxSoln.DOY         = DOY;
-                    rawxSoln.svg(id).PRN = obj.svGps(id).ID;
-                    rawxSoln.svg(id).C1C = C1C;
-                    rawxSoln.svg(id).L1C = L1C;
-                    rawxSoln.svg(id).D1C = D1C;
-                    rawxSoln.svg(id).S1C = [];
-                    rawxSoln.svg(id).cn0 = cn0;
-                    rawxSoln.svg(id).LLI = LLI;
-                    rawxSoln.svg(id).pos = satPos;
-                    rawxSoln.svg(id).vel = satVel;
-                    rawxSoln.svg(id).clkBias_m = dTs*wgs84.c_light;
-                    rawxSoln.svg(id).clkDrift_mps = ddTs*wgs84.c_light;
+                    rawxSoln.gTr          = gT_r;
+                    rawxSoln.SOW          = gT_r*1;       % can be presented ok
+                    rawxSoln.DOY          = DOY;
+
+                    % receiver clockBias and drift terms
                     rawxSoln.bias_m      = obj.RxaClk.delay*wgs84.c;
                     rawxSoln.drift_mps   = obj.RxaClk.ddelay*wgs84.c;
+
+                    % Note: slightly redundant information about the
+                    %     : driving solution (truth solution this epoch)
                     rawxSoln.pos_ecef    = r_ea_e1;
                     rawxSoln.vel_ecef    = v_ea_e1;
-                end
 
+                    % note: svg is indexed by prn and it is pre-allocated
+                    % to the expected PRN size per constellation
+                    % svg - 36, sve - 36
+                    rawxSoln.svg(prn).PRN = prn;
+                    rawxSoln.svg(prn).C1C = C1C;
+                    rawxSoln.svg(prn).L1C = L1C;
+                    rawxSoln.svg(prn).D1C = D1C;
+                    rawxSoln.svg(prn).S1C = [];
+                    rawxSoln.svg(prn).cn0 = cn0;
+                    rawxSoln.svg(prn).LLI = LLI;
+                    rawxSoln.svg(prn).pos = satPos;
+                    rawxSoln.svg(prn).vel = satVel;
+                    rawxSoln.svg(prn).clkBias_m = dTs*wgs84.c_light;
+                    rawxSoln.svg(prn).clkDrift_mps = ddTs*wgs84.c_light;
+                end
             end
+
+            % persistent obs struct
+            obj.obs = rawxSoln;
 
             % RX-A CLOCK MODEL
             obj.RxaClk.common();
@@ -215,6 +232,13 @@ classdef Gnss < handle
     end
 
     methods(Static)
+        function obs = emptyObs()
+            % Used to initialise empty obs struct
+            fmtGps = struct('PRN',cell(1,32),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[], 'cn0', []);
+            fmtGal = struct('PRN',cell(1,36),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[], 'cn0', []);
+            obs    = struct('SOW',[],'DOY',[], 'gTr', [], 'svg',fmtGps,'sve',fmtGal);
+        end
+
         function SV = createSv(EphStruct)
             % Function that takes an ephemeris structure creates a space
             % vehicle structure.
