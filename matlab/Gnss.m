@@ -47,6 +47,11 @@ classdef Gnss < handle
                 opts.?Gnss
             end
 
+            % opts only holds fields the caller actually passed - use
+            % that to detect an explicit gpsStartTime_s instead of the
+            % old value-comparison sentinel below
+            autoStartTime = ~isfield(opts, 'gpsStartTime_s');
+
             for prop = string(fieldnames(opts))'
                 obj.(prop) = opts.(prop);
             end
@@ -84,7 +89,7 @@ classdef Gnss < handle
             obj.svGps = Gnss.createSv(EphStruct);
 
             % Set my experiment time as the max TOC time
-            if obj.gpsStartTime_s == g_time(datetime(2019,03,02,13,00,00))
+            if autoStartTime
                 fprintf('...set exp start time from max TOC \n');
                 tocValues = nan(1, length(obj.svGps));
                 hasToc    = ~arrayfun(@(s) isempty(s.TOC), obj.svGps);
@@ -160,6 +165,19 @@ classdef Gnss < handle
             config.incTxClk   = obj.incTxClk;
             config.incNcyc    = obj.incNcyc;
 
+            % Receiver-level fields don't depend on any satellite
+            % fill them regardless of visibility so the field set is
+            % the same every epoch. gTr matches what sat.PR computes
+            % per-satellite internally (same t, same Rx clock state).
+            gTrEpoch           = gTime(t,0) + gTime(0, obj.RxaClk.delay*obj.incRxClk);
+            rawxSoln.gTr       = gTrEpoch;
+            rawxSoln.SOW       = gTrEpoch*1;
+            rawxSoln.DOY       = DOY;
+            rawxSoln.bias_m    = obj.RxaClk.delay*wgs84.c;
+            rawxSoln.drift_mps = obj.RxaClk.ddelay*wgs84.c;
+            rawxSoln.pos_ecef  = r_ea_e1;
+            rawxSoln.vel_ecef  = v_ea_e1;
+
             % calculate satellite positions at time of transmission - t
             for iPrn=1:nSats
                 if isempty(obj.svGps(iPrn).ID)
@@ -186,20 +204,6 @@ classdef Gnss < handle
 
                 % Store measurements if OK
                 if ~isnan(C1C)
-                    % Receiver data holder
-                    rawxSoln.gTr          = gT_r;
-                    rawxSoln.SOW          = gT_r*1;       % can be presented ok
-                    rawxSoln.DOY          = DOY;
-
-                    % receiver clockBias and drift terms
-                    rawxSoln.bias_m      = obj.RxaClk.delay*wgs84.c;
-                    rawxSoln.drift_mps   = obj.RxaClk.ddelay*wgs84.c;
-
-                    % Note: slightly redundant information about the
-                    %     : driving solution (truth solution this epoch)
-                    rawxSoln.pos_ecef    = r_ea_e1;
-                    rawxSoln.vel_ecef    = v_ea_e1;
-
                     % note: svg is indexed by prn and it is pre-allocated
                     % to the expected PRN size per constellation
                     % svg - 36, sve - 36
@@ -234,9 +238,9 @@ classdef Gnss < handle
     methods(Static)
         function obs = emptyObs()
             % Used to initialise empty obs struct
-            fmtGps = struct('PRN',cell(1,32),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[], 'cn0', []);
-            fmtGal = struct('PRN',cell(1,36),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[], 'cn0', []);
-            obs    = struct('SOW',[],'DOY',[], 'gTr', [], 'svg',fmtGps,'sve',fmtGal);
+            fmtGps = struct('PRN',cell(1,32),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[], 'cn0', [], 'pos', [], 'vel', [], 'clkBias_m', [], 'clkDrift_mps', []);
+            fmtGal = struct('PRN',cell(1,36),'C1C',[],'L1C',[],'D1C',[],'S1C',[],'LLI',[], 'cn0', [], 'pos', [], 'vel', [], 'clkBias_m', [], 'clkDrift_mps', []);
+            obs    = struct('SOW',[],'DOY',[], 'gTr', [], 'bias_m', [], 'drift_mps', [], 'pos_ecef', [], 'vel_ecef', [], 'svg',fmtGps,'sve',fmtGal);
         end
 
         function SV = createSv(EphStruct)
