@@ -7,14 +7,17 @@ function DataOut = gnss_rx(varargin)
 rng(1);
 
 % Error models to include
-include.Random = false;
-include.Iono   = true;
-include.Tropo  = true;
-include.MP     = true;
-include.Th     = true;
-include.Rx     = true;
-include.Tx     = true;
-include.N      = true;
+config.incRnd      = false; % include random noise
+config.incIono     = true;  % include iono delays
+config.incTropo    = true;  % include tropo delays
+config.incMp       = true;  % include multipath
+config.incTh       = true;  % include thermal noise
+config.incRxClk    = true;  % include receiver clock errors e.g. if 
+                            % false then the clockBias and clockDrift
+                            % will be zero
+config.incTxClk    = true;  % include satellite clock errors.
+                            % is not using the mask
+config.incNcyc     = true;  % include integer number of cycles in
 
 % User Configs | Also through varargins
 config.mask_angle  = 15;
@@ -238,7 +241,6 @@ for t=time_flght_start.g_sow:DT_step:time_flght_start.g_sow+maxSeconds-1 %3600*2
          
         % Get classes
         class.config    = config;
-        class.include   = include;
         class.IonoCoeff = IonoCoeff;
         class.Ir        = Ir;
         class.Tr        = Tr;
@@ -314,7 +316,7 @@ RXb(epoch+1:end)=[];
 DataOut.Iono_delay      = Iono_delay; % Only the residual
 DataOut.IonoCoefficients = IonoCoefficients;
 DataOut.Function  = 'gnss_rx';
-DataOut.include   = include;
+DataOut.config    = config;
 DataOut.RXa       = RXa;
 DataOut.RXb       = RXb;
 DataOut.SVg_e     = SV; % GPS ephemeris only | TODO: svG_e, svE_e, svR_e

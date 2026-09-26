@@ -1,8 +1,8 @@
-% Hery A Mwenegoha copyright (c) 2020
+% Copyright © Hery A Mwenegoha © 2020 - 2025
 
 function [gnssObj,rawxSoln] = gnss_rx_update(gnssObj, current_SOW, posEcef, velEcef, Rpy)
 % This function is called every navEpoch to compute the raw GNSS
-% observables. 
+% observables.
 % Inputs:
 %   gnssObj - the gnssObj structure containing information for the
 %   simulated receiver.
@@ -54,20 +54,19 @@ for nPRN=1:nSats
     
     % Get classes
     class.config    = gnssObj.config;
-    class.include   = gnssObj.include;
     class.IonoCoeff = gnssObj.IonoCoeff;
     class.Ir        = gnssObj.Ir;
     class.Tr        = gnssObj.Tr;
     class.Mp        = gnssObj.Mpa(id);
     class.Th        = gnssObj.Tha;
-    class.Rx        = gnssObj.Rxa;
+    class.Rx        = gnssObj.RxaClk;
     class.Nn        = gnssObj.Na(id);
     class.r_e       = r_ea_e1;
     class.v_e       = v_ea_e1;
     class.att       = att;
     
     % Compute measurements
-    [gT_r,C1C,L1C,D1C,LLI]=sat.PR(svGps, id,t,class);
+    [gT_r,C1C,L1C,D1C,LLI,cn0, satPos, satVel, dTs, ddTs]=sat.PR(svGps, id,t,class);
     
     % Store measurements if OK
     if ~isnan(C1C)
@@ -81,21 +80,26 @@ for nPRN=1:nSats
         rawxSoln.svg(id).L1C = L1C;
         rawxSoln.svg(id).D1C = D1C;
         rawxSoln.svg(id).S1C = [];
+        rawxSoln.svg(id).cn0 = cn0;
         rawxSoln.svg(id).LLI = LLI;
-        rawxSoln.bias_m      = gnssObj.Rxa.delay*wgs84.c;
-        rawxSoln.drift_mps   = gnssObj.Rxa.ddelay*wgs84.c;
+        rawxSoln.svg(id).pos = satPos;
+        rawxSoln.svg(id).vel = satVel;
+        rawxSoln.svg(id).clkBias_m = dTs*wgs84.c_light;
+        rawxSoln.svg(id).clkDrift_mps = ddTs*wgs84.c_light;
+        rawxSoln.bias_m      = gnssObj.RxaClk.delay*wgs84.c;
+        rawxSoln.drift_mps   = gnssObj.RxaClk.ddelay*wgs84.c;
         rawxSoln.pos_ecef    = r_ea_e1;
-        rawxSoln.vel_ecef    = v_ea_e1;        
+        rawxSoln.vel_ecef    = v_ea_e1;
     end
     
 end
 
 % RX-A CLOCK MODEL
-gnssObj.Rxa.common;
+gnssObj.RxaClk.common();
 
 % IONO-GM Process
-gnssObj.Ir.common;
+gnssObj.Ir.common();
 
 % TROPO-GM Process
-gnssObj.Tr.common;
+gnssObj.Tr.common();
 end

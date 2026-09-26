@@ -22,23 +22,31 @@ classdef IFbias < handle
         sigma_to = 0.005;  % [m]
         C0       = 86400;  % [s]
         Tau      = 1;      % [s]
-        delta_t  = 1;      % [s]
     end
     
     properties(Access=private)
         residual;
     end
     
-    methods 
-        function this= IFbias
+    properties
+        delta_t  = 1;      % [s]
+    end
+    
+    methods
+        function this= IFbias(delta_t)
+            % Constructor
+            arguments
+                delta_t double = 1; % sample rate in seconds
+            end
             this.residual = 0;
+            this.delta_t = delta_t;
         end
         
-        function y=delay(this, input, params)
-            time        = params.time;
-            sigma_IF    = this.sigma_to * exp(-time/this.C0);
+        function y=delay(this, time)
+            % Compute delay in seconds
+            sigma_IF= this.sigma_to * exp(-time/this.C0);
             
-            qk            = sigma_IF.^2*(1 - exp(-2*this.delta_t/this.Tau));                       % [m^2]
+            qk            = sigma_IF.^2*(1 - exp(-2*this.delta_t/this.Tau));             % [m^2]
             this.residual = this.residual.*exp(-this.delta_t/this.Tau) + randn*sqrt(qk); % [m]
             
             y=this.residual./wgs84.c;

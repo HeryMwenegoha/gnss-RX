@@ -21,12 +21,12 @@
 classdef RXthermal < handle
     properties(Constant)
         sigma_ca = 0.0007;
-        delta_t  = 1;
     end
     
     properties (Access = public)
         % access the returned SD in [m] for code and carrier
         sigma_;
+        delta_t;
     end
     
     properties(Access = private)
@@ -37,8 +37,13 @@ classdef RXthermal < handle
     end
     
     methods
-        function this= RXthermal
+        function this= RXthermal(delta_t)
             % Constructor
+            arguments
+                delta_t (1,1) double = 1;
+            end
+            this.delta_t = delta_t;
+            
             this.L1.C0   = 0.05; % [m]
             this.L1.C1   = 1.05; % [m]
             this.L1.C2   = 28.0; %[dB-Hz]

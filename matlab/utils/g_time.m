@@ -1,3 +1,4 @@
+% Copyright © Hery A Mwenegoha © 2020 - 2025
 classdef g_time 
     % Can be used to hold any time object in calendar format
     properties
@@ -40,8 +41,7 @@ classdef g_time
              new_ff       = obj1.fractional_second;
              obj3         = g_time(new_datetime, new_ff);
         end
-        
-        
+
         function y = colon(a, d, b)
             obj1 = a;
             aa   = obj1.date_time + seconds(obj1.fractional_second);
@@ -63,19 +63,29 @@ classdef g_time
             end
         end
         
-        
         function y = minus(obj1, obj2)
             diff_fractional = obj1.fractional_second -...
                               obj2.fractional_second;
             dt        = obj1.date_time - obj2.date_time;% duration object
             ff        = diff_fractional;                % could be negative
-            z         = dt + seconds(ff);
+            z         = dt + (ff);
             y.seconds = seconds(z);
             y.days    = days(z);
             y.hour    = hours(z);
             y.minute  = minutes(z);
         end
-        
+
+        function isEqual = eq(obj1, obj2)
+            % Check if the input is of the same class
+            if ~isa(obj2, 'g_time')
+                error('g_time::eq::The second operand must be a g_time object');
+            end
+
+            % Compare the datetime and fractional second properties
+            isEqual = isequal(obj1.date_time, obj2.date_time) && ...
+                isequal(obj1.fractional_second, obj2.fractional_second);
+        end
+
         function y=g_week(obj)
             y=g_time.gps_week(obj);
         end

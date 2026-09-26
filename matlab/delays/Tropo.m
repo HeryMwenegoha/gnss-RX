@@ -23,7 +23,6 @@
 classdef Tropo < handle
     properties(Constant)
         sigma     = 0.1; %0.20m    Troposphere Error
-        delta_t   =  1;
         Tau       = 1800;
     end
     
@@ -34,8 +33,17 @@ classdef Tropo < handle
         residual_old;
     end
     
+    properties
+        delta_t
+    end
+    
     methods
-        function this=Tropo
+        function this=Tropo(delta_t)
+            arguments
+                delta_t (1,1) double  =  1; % sampling interval [s]
+            end
+            this.delta_t   =  delta_t;
+            
             this.qk        = this.sigma.^2*(1 - exp(-2*this.delta_t/this.Tau));
             this.residual_ = this.sigma*randn;
             this.residual_old = 0;
